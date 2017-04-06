@@ -11,7 +11,7 @@ import pkgPokerEnum.eCardNo;
 import pkgPokerEnum.eHandStrength;
 import pkgPokerEnum.eRank;
 import pkgPokerEnum.eSuit;
- 
+import PkgException.HandException;
 
 public class Hand {
 
@@ -40,10 +40,34 @@ public class Hand {
 		CardsInHand.add(c);
 	}
 
-	public Hand EvaluateHand() {
+	
+	public static Hand PickBestHand(ArrayList<Hand> HandList) throws HandException {
+		Hand BestHand = HandList.get(0);
+		
+		for(int i = 1; i < HandList.size(); i++){
+			Hand comparableHand = EvaluateHand(HandList.get(i));
+			if(HandRank.compare(BestHand, comparableHand) == 0){
+				throw new HandException(comparableHand);
+			} 
+			if(HandRank.compare(BestHand, comparableHand) > 0){
+				BestHand = EvaluateHand(HandList.get(i));
+			} 
+	
+		}
+		
+		
+		return BestHand;
+	}
+
+	
+	public Hand EvaluateHand() throws HandException{
 
 		Hand h = null;
 
+		if (this.getCardsInHand().size()!=5){
+				throw new HandException(this);
+		}
+		
 		ArrayList<Hand> ExplodedHands = ExplodeHands(this);
 
 		for (Hand hand : ExplodedHands) {
@@ -66,12 +90,56 @@ public class Hand {
 	public static ArrayList<Hand> ExplodeHands(Hand h) {
 
 		ArrayList<Hand> ReturnHands = new ArrayList<Hand>();
+		int Jokers = 0;
+		for (Card card : h.getCardsInHand()) {
+			if (card.geteRank().getiRankNbr() == eRank.JOKER.getiRankNbr()) {
+				Jokers = Jokers + 1;
+			}
+		}
+		if (Jokers == 0) {
+			ReturnHands.add(h);
+			return ReturnHands;
+		}
+		Collections.sort(h.getCardsInHand());
+		ReturnHands.add(h);
+		for (int i = 0; i < Jokers; i++) {
+			ReturnHands = SubHands(ReturnHands, i);
+		}
 		return ReturnHands;
 	}
 
-	private static Hand EvaluateHand(Hand h) {
+	private void setCardsInHand(ArrayList<Card> card) {
+		this.CardsInHand = card;
+	}
 
-		Collections.sort(h.getCardsInHand());
+	private static ArrayList<Hand> SubHands(ArrayList<Hand> hands, int location) {
+		ArrayList<Hand> temp = new ArrayList<Hand>();
+		for (Hand h : hands) {
+			if (h.getCardsInHand().get(location).geteRank() == eRank.JOKER) {
+				for (eSuit suit : eSuit.values()) {
+					for (eRank rank : eRank.values()) {
+						if ((suit != eSuit.JOKER) && (rank != eRank.JOKER)) {
+							Hand T1 = new Hand();
+							T1.setCardsInHand(h.CardsInHand);
+							T1.getCardsInHand().set(location, new Card(suit, rank, 1));
+							temp.add(T1);
+						}
+					}
+				}
+			} else {
+				temp.add(h);
+			}
+		}
+		return temp;
+	}
+
+	private static Hand EvaluateHand(Hand h) throws HandException {
+		
+			if (h.getCardsInHand().size() != 5) {
+				throw new HandException(h);
+			}
+		
+			Collections.sort(h.getCardsInHand());
 
 		// Another way to sort
 		// Collections.sort(h.getCardsInHand(), Card.CardRank);
@@ -213,7 +281,27 @@ public class Hand {
 
 	}
 
-	// TODO: Implement This Method
+	public static boolean isHandFiveOfAKind(Hand h, HandScore hs) {
+
+		boolean isHandFiveOfAKind = false;
+
+		ArrayList<Card> kickers = new ArrayList<Card>();
+		if (h.getCardsInHand().get(eCardNo.FirstCard.getCardNo()).geteRank() == h.getCardsInHand()
+				.get(eCardNo.FifthCard.getCardNo()).geteRank()) {
+			isHandFiveOfAKind = true;
+			hs.setHiHand(h.getCardsInHand().get(eCardNo.FirstCard.getCardNo()).geteRank());
+			
+		}
+
+		if (isHandFiveOfAKind) {
+			hs.setHandStrength(eHandStrength.FiveOfAKind);
+			hs.setLoHand(null);
+			hs.setKickers(kickers);
+		}
+
+		return isHandFiveOfAKind;
+	}
+
 	public static boolean isHandFourOfAKind(Hand h, HandScore hs) {
 
 		boolean isHandFourOfAKind = false;
@@ -412,7 +500,7 @@ public class Hand {
 		boolean isAcesAndEights = false;
 		if (Hand.isHandTwoPair(h, hs) == true) {
 			if ((h.getCardsInHand().get(eCardNo.FirstCard.getCardNo()).geteRank() == eRank.ACE)
-					&& (h.getCardsInHand().get(eCardNo.FirstCard.getCardNo()).geteRank() == eRank.EIGHT)) {
+					&& (h.getCardsInHand().get(eCardNo.FourthCard.getCardNo()).geteRank() == eRank.EIGHT)) {
 				hs.setHandStrength(eHandStrength.AcesAndEights);
 				isAcesAndEights = true;
 			}

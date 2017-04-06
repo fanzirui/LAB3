@@ -1,5 +1,6 @@
 package pkgPokerEnum;
 
+
 public enum eRank {
 	TWO(2), 
 	THREE(3), 
@@ -13,8 +14,9 @@ public enum eRank {
 	JACK(11), 
 	QUEEN(12), 
 	KING(13), 
-	ACE(14);
-
+	ACE(14),
+	JOKER(15);
+	
 	private int iRankNbr;
 
 	private eRank(int iRankNbr) {

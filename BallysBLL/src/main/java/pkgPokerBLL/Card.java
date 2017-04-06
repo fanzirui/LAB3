@@ -10,6 +10,7 @@ public class Card implements Comparable {
 	private eRank eRank;
 	private eSuit eSuit;
 	private int iCardNbr;
+	private boolean Wild;
 
 	public Card() {
 	}
@@ -26,6 +27,19 @@ public class Card implements Comparable {
 		this.iCardNbr = iCardNbr;
 	}
 
+	
+	public Card isWild(Card card){
+		Card WildCard = new Card(card.geteRank(), card.geteSuit(), 1);
+		Wild = true;
+		card.seteRank(eRank.JOKER);
+		card.seteSuit(eSuit.JOKER);
+		return WildCard;
+		}
+	
+	public boolean isWild(){
+		return Wild = true;
+	}
+	
 	public eRank geteRank() {
 		return eRank;
 	}
